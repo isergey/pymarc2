@@ -1,14 +1,8 @@
 # encoding: utf-8
 from array import array
 import exc
-from exc import BaseAddressInvalid
 from marc8 import marc8_to_unicode
-#from exceptions import BaseAddressInvalid, RecordLeaderInvalid,\
-#    BaseAddressNotFound, RecordDirectoryInvalid, NoFieldsFound,\
-#    FieldNotFound
-
 from field import ControlField, DataField, Subfield, LinkedSubfield
-
 from constants import LEADER_LEN, DIRECTORY_ENTRY_LEN, SUBFIELD_INDICATOR, END_OF_FIELD, END_OF_RECORD
 
 class Record(object):
@@ -18,9 +12,6 @@ class Record(object):
         self.fields = {}
         self.raw = raw
         self.raw_encoding = raw_encoding
-
-#        if len(raw):
-#            self.decode(raw, raw_encoding)
 
     def _load(self):
         if self.raw:
@@ -38,14 +29,14 @@ class Record(object):
         # extract record leader
         self.leader = array('c', raw[0:LEADER_LEN])
         if len(self.leader) != LEADER_LEN:
-            raise RecordLeaderInvalid
+            raise exc.RecordLeaderInvalid
 
         # extract the byte offset where the record data starts
         base_address = int(raw[12:17])
         if base_address <= 0:
-            raise BaseAddressNotFound
+            raise exc.BaseAddressNotFound
         if base_address >= len(raw):
-            raise BaseAddressInvalid
+            raise exc.BaseAddressInvalid
 
         # extract directory, base_address-1 is used since the
         # director ends with an END_OF_FIELD byte
@@ -53,7 +44,7 @@ class Record(object):
 
         # determine the number of fields in record
         if len(directory) % DIRECTORY_ENTRY_LEN != 0:
-            raise RecordDirectoryInvalid
+            raise exc.RecordDirectoryInvalid
         field_total = len(directory) / DIRECTORY_ENTRY_LEN
 
         # add fields to our record using directory offsets
@@ -106,7 +97,7 @@ class Record(object):
             field_count += 1
 
         if field_count == 0:
-            raise NoFieldsFound
+            raise exc.NoFieldsFound
 
     def as_marc(self, to_encoding='utf-8'):
         """
@@ -195,14 +186,14 @@ class UnimarcRecord(Record):
         # extract record leader
         self.leader = array('c', raw[0:LEADER_LEN])
         if len(self.leader) != LEADER_LEN:
-            raise RecordLeaderInvalid
+            raise exc.RecordLeaderInvalid
 
         # extract the byte offset where the record data starts
         base_address = int(raw[12:17])
         if base_address <= 0:
-            raise BaseAddressNotFound
+            raise exc.BaseAddressNotFound
         if base_address >= len(raw):
-            raise BaseAddressInvalid
+            raise exc.BaseAddressInvalid
 
         # extract directory, base_address-1 is used since the
         # director ends with an END_OF_FIELD byte
@@ -210,7 +201,7 @@ class UnimarcRecord(Record):
 
         # determine the number of fields in record
         if len(directory) % DIRECTORY_ENTRY_LEN != 0:
-            raise RecordDirectoryInvalid
+            raise exc.RecordDirectoryInvalid
         field_total = len(directory) / DIRECTORY_ENTRY_LEN
 
         # add fields to our record using directory offsets
@@ -277,7 +268,6 @@ class UnimarcRecord(Record):
                         code = subfield[0]
                         data = subfield[1:]
 
-
                         if raw_encoding == 'marc8':
                             data = marc8_to_unicode(data)
                         else:
@@ -298,4 +288,4 @@ class UnimarcRecord(Record):
             field_count += 1
 
         if field_count == 0:
-            raise NoFieldsFound
+            raise exc.NoFieldsFound
