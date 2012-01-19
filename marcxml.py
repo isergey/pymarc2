@@ -206,7 +206,7 @@ def record_to_rustam_xml(record, namespace=False):
     return ET.tostring(root, encoding='utf-8')
 
 
-
+# xml decoders
 
 def record_to_xml(record):
     if isinstance(record, UnimarcRecord):
