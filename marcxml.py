@@ -1,8 +1,8 @@
 # encoding: utf-8
-from xml.etree import cElementTree as ET
+from lxml import etree as ET
 
 from record import Record, UnimarcRecord
-from field import ControlField, DataField, LinkedSubfield, Subfield
+from field import ControlField, LinkedSubfield
 
 XSI_NS = "http://www.w3.org/2001/XMLSchema-instance"
 MARC_XML_NS = "http://www.loc.gov/MARC21/slim"
@@ -10,8 +10,7 @@ MARC_XML_SCHEMA = "http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/m
 
 
 
-
-def record_to_marc_xml(record, namespace=False):
+def record_to_marc_xml(record, namespace=False, xml_declaration=False):
     """
     To Marc21slim
     """
@@ -41,14 +40,22 @@ def record_to_marc_xml(record, namespace=False):
                         data_subfield.set('code', subfield.code)
                         data_subfield.text = subfield.data
 
-    return ET.tostring(root, encoding='utf-8')
+    return ET.tostring(root, encoding='utf-8', xml_declaration=xml_declaration)
+
+
+
+
 
 
 UNIMARC_XSI_NS = "http://www.w3.org/2001/XMLSchema"
 UNIMARC_MARC_XML_NS = "http://www.loc.gov/MARC21/slim"
 UNIMARC_MARC_XML_SCHEMA = "http://www.rusmarc.ru/shema/UNISlim.xsd"
 
-def record_to_unimarc_xml(record, namespace=False):
+
+
+
+
+def record_to_unimarc_xml(record, namespace=False, xml_declaration=False):
     """
     To UNISlim
     """
@@ -98,10 +105,13 @@ def record_to_unimarc_xml(record, namespace=False):
                             data_subfield.set('code', subfield.code)
                             data_subfield.text = subfield.data
 
-    return ET.tostring(root, encoding='utf-8')
+    return ET.tostring(root, encoding='utf-8', xml_declaration=xml_declaration)
 
 
-def record_to_rustam_xml(record, namespace=False):
+
+
+
+def record_to_rustam_xml(record, namespace=False, xml_declaration=False):
 
     string_leader = record.leader.tostring()
 
@@ -202,8 +212,7 @@ def record_to_rustam_xml(record, namespace=False):
                             data_subfield = ET.SubElement(data_field, 'subfield')
                             data_subfield.set('id', subfield.code)
                             data_subfield.text = subfield.data
-
-    return ET.tostring(root, encoding='utf-8')
+    return ET.tostring(root, encoding='utf-8', xml_declaration=xml_declaration)
 
 
 # xml decoders
@@ -211,7 +220,7 @@ def record_to_rustam_xml(record, namespace=False):
 def record_to_xml(record):
     if isinstance(record, UnimarcRecord):
         #xml_record = record_to_unimarc_xml(record)
-        xml_record = record_to_rustam_xml(record)
+        xml_record = record_to_rustam_xml(record, xml_declaration=True)
     elif isinstance(record, Record):
         xml_record = record_to_marc_xml(record)
 

@@ -9,14 +9,52 @@ class Record(object):
     def __init__(self, raw='', raw_encoding='utf-8'):
 
         self.leader = array('c', '          22        4500')
-        self.fields = {}
+        self._fields = {}
         self.raw = raw
         self.raw_encoding = raw_encoding
 
+    def __getitem__(self, item):
+        return self.fields[item]
+
     def _load(self):
+        """
+        for lazy load
+        """
         if self.raw:
             self.decode(self.raw, self.raw_encoding)
             self.raw=None
+
+
+    @property
+    def fields(self):
+        self._load()
+        return self._fields
+
+
+    @fields.setter
+    def fields(self, value):
+        self._fields = value
+
+
+    def to_dict(self):
+        record_dict = {
+            'leader': self.leader.tostring(),
+            'controlfields':{},
+            'datafields': {}
+        }
+        for key in sorted(self.fields.iterkeys()):
+
+            for field in self._fields[key]:
+                if isinstance(field, ControlField):
+                    if field.tag not in record_dict['controlfields']:
+                        record_dict['controlfields'][field.tag] = []
+                    record_dict['controlfields'][field.tag].append(field.to_dict())
+                else:
+                    if field.tag not in record_dict['datafields']:
+                        record_dict['datafields'][field.tag] = []
+                    record_dict['datafields'][field.tag].append(field.to_dict())
+        return record_dict
+
 
     def decode(self, raw, raw_encoding):
         """
@@ -90,10 +128,10 @@ class Record(object):
                     ind2=ind2,
                     subfields=subfields,
                 )
-            if field.tag not in self.fields:
-                self.fields[field.tag] = []
+            if field.tag not in self._fields:
+                self._fields[field.tag] = []
 
-            self.fields[field.tag].append(field)
+            self._fields[field.tag].append(field)
             field_count += 1
 
         if field_count == 0:
@@ -115,9 +153,9 @@ class Record(object):
         # each element of the directory includes the tag, the byte length of
         # the field and the offset from the base address where the field data
         # can be found
-        for key in sorted(self.fields.iterkeys()):
+        for key in sorted(self._fields.iterkeys()):
 
-            for field in self.fields[key]:
+            for field in self._fields[key]:
                 field_data = field.as_marc(to_encoding)
                 fields.append(field_data)
                 directory.append('%03d' % int(field.tag))
@@ -150,8 +188,8 @@ class Record(object):
     def __unicode__(self):
         self._load()
         lines = [self.leader.tostring().replace(' ', '#')]
-        for key in sorted(self.fields.iterkeys()):
-            for field in self.fields[key]:
+        for key in sorted(self._fields.iterkeys()):
+            for field in self._fields[key]:
                 lines.append(unicode(field))
         return u'\n'.join(lines)
 
@@ -167,13 +205,14 @@ class UnimarcRecord(Record):
     def __unicode__(self):
         self._load()
         lines = [self.leader.tostring().replace(' ', '#')]
-        for key in sorted(self.fields.iterkeys()):
-            for field in self.fields[key]:
+        for key in sorted(self._fields.iterkeys()):
+            for field in self._fields[key]:
                 lines.append(unicode(field))
         return u'\n'.join(lines)
 
     def __str__(self):
         return unicode(self).encode('utf-8')
+
 
     def decode(self, raw, raw_encoding):
         """
@@ -281,10 +320,10 @@ class UnimarcRecord(Record):
                     ind2=ind2,
                     subfields=subfields,
                 )
-            if field.tag not in self.fields:
-                self.fields[field.tag] = []
+            if field.tag not in self._fields:
+                self._fields[field.tag] = []
 
-            self.fields[field.tag].append(field)
+            self._fields[field.tag].append(field)
             field_count += 1
 
         if field_count == 0:
