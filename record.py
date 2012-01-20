@@ -268,7 +268,7 @@ class UnimarcRecord(Record):
                 #########################################################################
                 if entry_tag > '399' and entry_tag < '500':
                     linked_subfield = None
-                    start_linked_parse = False
+                    start_linked_parse = False # flag of begining linked subfield parse
                     for subfield in subs[1:]:
                         code = subfield[0]
                         data = subfield[1:]
@@ -304,8 +304,7 @@ class UnimarcRecord(Record):
 
                     if start_linked_parse:
                         subfields.append(linked_subfield)
-                        # now set flag that linked field stop parse
-                        start_linked_parse = False
+                        start_linked_parse = False # now set flag that linked field stop parse
                 ##########################################################################
                 else:
                     for subfield in subs[1:]:

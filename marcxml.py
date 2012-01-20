@@ -111,11 +111,14 @@ def record_to_unimarc_xml(record, namespace=False):
 
 
 
-def record_to_rustam_xml(record, namespace=False):
-
+def record_to_rustam_xml(record, syntax='1.2.840.10003.5.28', namespace=False):
+    """
+    default syntax rusmarc
+    """
     string_leader = record.leader.tostring()
 
     root = ET.Element('record')
+    root.set('syntax', syntax)
     leader = ET.SubElement(root, 'leader')
 
 
