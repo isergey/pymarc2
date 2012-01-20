@@ -10,7 +10,7 @@ MARC_XML_SCHEMA = "http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/m
 
 
 
-def record_to_marc_xml(record, namespace=False, xml_declaration=False):
+def record_to_marc_xml(record, namespace=False):
     """
     To Marc21slim
     """
@@ -40,7 +40,7 @@ def record_to_marc_xml(record, namespace=False, xml_declaration=False):
                         data_subfield.set('code', subfield.code)
                         data_subfield.text = subfield.data
 
-    return ET.tostring(root, encoding='utf-8', xml_declaration=xml_declaration)
+    return root
 
 
 
@@ -55,7 +55,7 @@ UNIMARC_MARC_XML_SCHEMA = "http://www.rusmarc.ru/shema/UNISlim.xsd"
 
 
 
-def record_to_unimarc_xml(record, namespace=False, xml_declaration=False):
+def record_to_unimarc_xml(record, namespace=False):
     """
     To UNISlim
     """
@@ -105,13 +105,13 @@ def record_to_unimarc_xml(record, namespace=False, xml_declaration=False):
                             data_subfield.set('code', subfield.code)
                             data_subfield.text = subfield.data
 
-    return ET.tostring(root, encoding='utf-8', xml_declaration=xml_declaration)
+    return root
 
 
 
 
 
-def record_to_rustam_xml(record, namespace=False, xml_declaration=False):
+def record_to_rustam_xml(record, namespace=False):
 
     string_leader = record.leader.tostring()
 
@@ -212,7 +212,7 @@ def record_to_rustam_xml(record, namespace=False, xml_declaration=False):
                             data_subfield = ET.SubElement(data_field, 'subfield')
                             data_subfield.set('id', subfield.code)
                             data_subfield.text = subfield.data
-    return ET.tostring(root, encoding='utf-8', xml_declaration=xml_declaration)
+    return root
 
 
 # xml decoders
@@ -220,7 +220,7 @@ def record_to_rustam_xml(record, namespace=False, xml_declaration=False):
 def record_to_xml(record):
     if isinstance(record, UnimarcRecord):
         #xml_record = record_to_unimarc_xml(record)
-        xml_record = record_to_rustam_xml(record, xml_declaration=True)
+        xml_record = record_to_rustam_xml(record)
     elif isinstance(record, Record):
         xml_record = record_to_marc_xml(record)
 

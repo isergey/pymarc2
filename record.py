@@ -270,9 +270,9 @@ class UnimarcRecord(Record):
                 subs = entry_data.split(SUBFIELD_INDICATOR)
                 ind1 = subs[0][0]
                 ind2 = subs[0][1]
-#########################################################################################
-                #if entry_tag > '399' and entry_tag < '500':
-                if entry_tag[0] == '4':
+
+                #########################################################################
+                if entry_tag > '399' and entry_tag < '500':
                     linked_subfield = None
                     for subfield in subs[1:]:
                         code = subfield[0]
@@ -299,7 +299,7 @@ class UnimarcRecord(Record):
                                 data = data.decode(raw_encoding)
                             linked_subfield.field.add_subfield(Subfield(code, data))
                     subfields.append(linked_subfield)
-#########################################################################################
+                ##########################################################################
                 else:
                     for subfield in subs[1:]:
                         if len(subfield) == 0:
