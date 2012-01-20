@@ -38,3 +38,7 @@ class NoActiveFile(PymarcException):
 class FieldNotFound(PymarcException):
     def __str__(self):
         return "Record does not contain the specified field"
+
+class WrongLinkedField(PymarcException):
+    def __str__(self):
+        return "Linked field of record is wrong or this not unimarc record"

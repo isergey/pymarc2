@@ -7,7 +7,6 @@ from constants import LEADER_LEN, DIRECTORY_ENTRY_LEN, SUBFIELD_INDICATOR, END_O
 
 class Record(object):
     def __init__(self, raw='', raw_encoding='utf-8'):
-
         self.leader = array('c', '          22        4500')
         self._fields = {}
         self.raw = raw
@@ -22,7 +21,7 @@ class Record(object):
         """
         if self.raw:
             self.decode(self.raw, self.raw_encoding)
-            self.raw=None
+            self.raw = None
 
 
     @property
@@ -39,11 +38,10 @@ class Record(object):
     def to_dict(self):
         record_dict = {
             'leader': self.leader.tostring(),
-            'controlfields':{},
+            'controlfields': {},
             'datafields': {}
         }
         for key in sorted(self.fields.iterkeys()):
-
             for field in self._fields[key]:
                 if isinstance(field, ControlField):
                     if field.tag not in record_dict['controlfields']:
@@ -149,12 +147,11 @@ class Record(object):
         to_encoding = to_encoding.lower()
         if to_encoding == 'utf-8' or to_encoding == 'utf8':
             self.leader[9] = 'a'
-        # build the directory
+            # build the directory
         # each element of the directory includes the tag, the byte length of
         # the field and the offset from the base address where the field data
         # can be found
         for key in sorted(self._fields.iterkeys()):
-
             for field in self._fields[key]:
                 field_data = field.as_marc(to_encoding)
                 fields.append(field_data)
@@ -179,8 +176,9 @@ class Record(object):
 
         # update the leader with the current record length and base address
         # the lengths are fixed width and zero padded
-        self.leader = array('c','%05d%s%05d%s' %\
-                      (record_length, self.leader[5:12].tostring(), base_address, self.leader[17:].tostring()))
+        self.leader = array('c', '%05d%s%05d%s' %\
+                                 (record_length, self.leader[5:12].tostring(), base_address,
+                                  self.leader[17:].tostring()))
 
         # return the encoded record
         return self.leader.tostring() + directory + fields
@@ -197,10 +195,9 @@ class Record(object):
         return unicode(self).encode('utf-8')
 
 
-
 class UnimarcRecord(Record):
     def __init__(self, raw='', raw_encoding='utf-8'):
-        super(UnimarcRecord,self).__init__(raw, raw_encoding)
+        super(UnimarcRecord, self).__init__(raw, raw_encoding)
 
     def __unicode__(self):
         self._load()
@@ -263,9 +260,6 @@ class UnimarcRecord(Record):
                     data = entry_data.decode(raw_encoding)
                 field = ControlField(tag=entry_tag, data=data)
             else:
-
-
-
                 subfields = []
                 subs = entry_data.split(SUBFIELD_INDICATOR)
                 ind1 = subs[0][0]
@@ -274,10 +268,12 @@ class UnimarcRecord(Record):
                 #########################################################################
                 if entry_tag > '399' and entry_tag < '500':
                     linked_subfield = None
+                    start_linked_parse = False
                     for subfield in subs[1:]:
                         code = subfield[0]
                         data = subfield[1:]
                         if code == '1':
+                            start_linked_parse = True # begin parse linked subfield
                             if linked_subfield:
                                 subfields.append(linked_subfield)
 
@@ -290,15 +286,26 @@ class UnimarcRecord(Record):
                                     data = data.decode(raw_encoding)
                                 linked_subfield.field = ControlField(linked_field_tag, data.decode(raw_encoding))
                             else:
-                                linked_subfield.field = DataField(tag=linked_field_tag,ind1=data[3], ind2=data[4])
+                                linked_subfield.field = DataField(tag=linked_field_tag, ind1=data[3], ind2=data[4])
 
-                        else:
+                        elif start_linked_parse: # if now parse linked subfield
                             if raw_encoding == 'marc8':
                                 data = marc8_to_unicode(data)
                             else:
                                 data = data.decode(raw_encoding)
                             linked_subfield.field.add_subfield(Subfield(code, data))
-                    subfields.append(linked_subfield)
+                        else: # if field with 4.. code but not have "1" linked subfield
+                            if raw_encoding == 'marc8':
+                                data = marc8_to_unicode(data)
+                            else:
+                                data = data.decode(raw_encoding)
+
+                        subfields.append(Subfield(code=code, data=data))
+
+                    if start_linked_parse:
+                        subfields.append(linked_subfield)
+                        # now set flag that linked field stop parse
+                        start_linked_parse = False
                 ##########################################################################
                 else:
                     for subfield in subs[1:]:
