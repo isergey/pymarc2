@@ -328,7 +328,7 @@ class UnimarcRecord(Record):
                         else:
                             data = data.decode(raw_encoding)
 
-                        subfields.append(Subfield(code=code, data=data))
+                            subfields.append(Subfield(code=code, data=data))
 
                 field = DataField(
                     tag=entry_tag,
