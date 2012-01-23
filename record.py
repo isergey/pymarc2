@@ -7,7 +7,7 @@ from constants import LEADER_LEN, DIRECTORY_ENTRY_LEN, SUBFIELD_INDICATOR, END_O
 
 class Record(object):
     def __init__(self, raw='', raw_encoding='utf-8'):
-        self.leader = array('c', '          22        4500')
+        self._leader = array('c', '          22        4500')
         self._fields = {}
         self.raw = raw
         self.raw_encoding = raw_encoding
@@ -22,6 +22,16 @@ class Record(object):
         if self.raw:
             self.decode(self.raw, self.raw_encoding)
             self.raw = None
+
+    @property
+    def leader(self):
+        self._load()
+        return self._leader
+
+
+    @leader.setter
+    def leader(self, value):
+        self._leader = value
 
 
     @property
@@ -63,8 +73,8 @@ class Record(object):
 
         """
         # extract record leader
-        self.leader = array('c', raw[0:LEADER_LEN])
-        if len(self.leader) != LEADER_LEN:
+        self._leader = array('c', raw[0:LEADER_LEN])
+        if len(self._leader) != LEADER_LEN:
             raise exc.RecordLeaderInvalid
 
         # extract the byte offset where the record data starts
@@ -146,7 +156,7 @@ class Record(object):
         offset = 0
         to_encoding = to_encoding.lower()
         if to_encoding == 'utf-8' or to_encoding == 'utf8':
-            self.leader[9] = 'a'
+            self._leader[9] = 'a'
             # build the directory
         # each element of the directory includes the tag, the byte length of
         # the field and the offset from the base address where the field data
@@ -176,16 +186,16 @@ class Record(object):
 
         # update the leader with the current record length and base address
         # the lengths are fixed width and zero padded
-        self.leader = array('c', '%05d%s%05d%s' %\
-                                 (record_length, self.leader[5:12].tostring(), base_address,
-                                  self.leader[17:].tostring()))
+        self._leader = array('c', '%05d%s%05d%s' %\
+                                  (record_length, self.leader[5:12].tostring(), base_address,
+                                   self.leader[17:].tostring()))
 
         # return the encoded record
-        return self.leader.tostring() + directory + fields
+        return self._leader.tostring() + directory + fields
 
     def __unicode__(self):
         self._load()
-        lines = [self.leader.tostring().replace(' ', '#')]
+        lines = [self._leader.tostring().replace(' ', '#')]
         for key in sorted(self._fields.iterkeys()):
             for field in self._fields[key]:
                 lines.append(unicode(field))
@@ -201,7 +211,7 @@ class UnimarcRecord(Record):
 
     def __unicode__(self):
         self._load()
-        lines = [self.leader.tostring().replace(' ', '#')]
+        lines = [self._leader.tostring().replace(' ', '#')]
         for key in sorted(self._fields.iterkeys()):
             for field in self._fields[key]:
                 lines.append(unicode(field))
@@ -220,8 +230,8 @@ class UnimarcRecord(Record):
 
         """
         # extract record leader
-        self.leader = array('c', raw[0:LEADER_LEN])
-        if len(self.leader) != LEADER_LEN:
+        self._leader = array('c', raw[0:LEADER_LEN])
+        if len(self._leader) != LEADER_LEN:
             raise exc.RecordLeaderInvalid
 
         # extract the byte offset where the record data starts
