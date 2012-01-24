@@ -187,8 +187,8 @@ class Record(object):
         # update the leader with the current record length and base address
         # the lengths are fixed width and zero padded
         self._leader = array('c', '%05d%s%05d%s' %\
-                                  (record_length, self.leader[5:12].tostring(), base_address,
-                                   self.leader[17:].tostring()))
+                                 (record_length, self.leader[5:12].tostring(), base_address,
+                                  self.leader[17:].tostring()))
 
         # return the encoded record
         return self._leader.tostring() + directory + fields
@@ -308,9 +308,11 @@ class UnimarcRecord(Record):
                             if raw_encoding == 'marc8':
                                 data = marc8_to_unicode(data)
                             else:
-                                data = data.decode(raw_encoding)
-
-                        subfields.append(Subfield(code=code, data=data))
+                                try:
+                                    data = data.decode(raw_encoding)
+                                except UnicodeDecodeError:
+                                    data = u"Can't decode field data"
+                            subfields.append(Subfield(code=code, data=data))
 
                     if start_linked_parse:
                         subfields.append(linked_subfield)
@@ -326,9 +328,11 @@ class UnimarcRecord(Record):
                         if raw_encoding == 'marc8':
                             data = marc8_to_unicode(data)
                         else:
-                            data = data.decode(raw_encoding)
-
-                            subfields.append(Subfield(code=code, data=data))
+                            try:
+                                data = data.decode(raw_encoding)
+                            except UnicodeDecodeError:
+                                data = u"Can't decode field data"
+                        subfields.append(Subfield(code=code, data=data))
 
                 field = DataField(
                     tag=entry_tag,
